@@ -1,16 +1,22 @@
 from distutils.core import setup
+
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name='preferred_pictures',
     packages=['preferred_pictures'],
-    version='0.1',
+    version='0.2',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     license='MIT',
     description='A client for the Preferred.pictures API that makes integration easy',
     author='Preferred.pictures',
     author_email='contact@preferred.pictures',
     url='https://github.com/preferred-pictures/python',
-    download_url='https://github.com/preferred-pictures/python/archive/v_01.tar.gz',
+    download_url='https://github.com/preferred-pictures/python/archive/v_02.tar.gz',
     keywords=['preferred.pictures', 'optimization'],
-    install_requires=[],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
