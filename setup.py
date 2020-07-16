@@ -7,10 +7,8 @@ setup(
     description='A client for the Preferred.pictures API that makes integration easy',
     author='Preferred.pictures',
     author_email='contact@preferred.pictures',
-    url='https://github.com/preferred-pictures/python',
-    # I explain this later on
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
-    # Keywords that define your package best
+    url='git@github.com:preferred-pictures/python.git',
+    download_url='https://github.com/preferred-pictures/python/archive/v_01.tar.gz',
     keywords=['preferred.pictures', 'optimization'],
     install_requires=[],
     classifiers=[
