@@ -14,8 +14,9 @@ setup(
     author='Preferred.pictures',
     author_email='contact@preferred.pictures',
     url='https://github.com/preferred-pictures/python',
-    download_url='https://github.com/preferred-pictures/python/archive/v_02.tar.gz',
+    download_url='https://github.com/preferred-pictures/python/archive/v_03.tar.gz',
     keywords=['preferred.pictures', 'optimization'],
+    test_suite="tests/TestIntegration.py",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

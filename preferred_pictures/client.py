@@ -9,9 +9,11 @@ from urllib.parse import urlencode
 signature_field_order = [
     "choices_prefix",
     "choices_suffix",
+    "choices[]",
     "choices",
     "destinations_prefix",
     "destinations_suffix",
+    "destinations[]",
     "destinations",
     "expiration",
     "go",
@@ -179,21 +181,24 @@ class Client:
         if go == True:
             params['go'] = 'true'
 
-        signing_string = "/".join(
-            map(lambda name: params[name] if isinstance(params[name], collections.abc.Iterable) == False else ",".join(params[name]),
-                filter(lambda name: name in params, signature_field_order)
-                )
-        )
+        params['identity'] = self.identity
+
+        included_fields = map(lambda name: params[name],
+                              filter(lambda name: name in params, signature_field_order))
+
+        signed_values = map(lambda v: ",".join(v) if isinstance(v, collections.abc.Iterable) and not isinstance(v, str) else v,
+                            included_fields)
+
+        signing_string = "/".join(signed_values)
 
         signature = hmac.new(
             bytearray(self.secret_key, 'utf8'),
             bytearray(signing_string, 'utf8'),
             hashlib.sha256).hexdigest()
 
-        params['identity'] = self.identity
         params['signature'] = signature
 
-        return "{}/choose-url?{}".format(self.endpoint, urlencode(params, True))
+        return "{}/choose?{}".format(self.endpoint, urlencode(params, True))
 
 
 if __name__ == "__main__":
