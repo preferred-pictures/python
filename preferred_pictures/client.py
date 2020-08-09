@@ -2,17 +2,23 @@ import hmac
 import hashlib
 import time
 import uuid
+import collections.abc
 from typing import Iterable
 from urllib.parse import urlencode
 
 signature_field_order = [
+    "choices_prefix",
+    "choices_suffix",
     "choices",
+    "destinations_prefix",
+    "destinations_suffix",
+    "destinations",
     "expiration",
-    "prefix",
-    "suffix",
+    "go",
+    "json",
     "tournament",
     "ttl",
-    "uid",
+    "uid"
 ]
 
 
@@ -36,19 +42,19 @@ class Client:
         The default value is 35.
 
     endpoint: str
-        The endpoint of the Preferred.pictures API that
+        The endpoint of the PreferredPictures API that
         should be used, by default this is
 
-        https://api.preferred.pictures
+        https://api.preferred-pictures.com
 
     Methods
     -------
     create_choose_url(choices: Iterable[str], tournament: str, ttl=600, expiration_ttl=3600, prefix='', suffix='') -> str:
-        Build a URL that calls the Preferred.pictures API to select
+        Build a URL that calls the PreferredPictures API to select
         one choice from the list of choices available.
     """
 
-    def __init__(self, identity: str, secret_key: str, max_choices=35, endpoint="https://api.preferred.pictures"):
+    def __init__(self, identity: str, secret_key: str, max_choices=35, endpoint="https://api.preferred-pictures.com"):
         """
         Creates a new PreferredPictures client.
 
@@ -71,9 +77,21 @@ class Client:
         self.max_choices = max_choices
         self.endpoint = endpoint
 
-    def create_choose_url(self, choices: Iterable[str], tournament: str, ttl=600, expiration_ttl=3600, prefix='', suffix='') -> str:
+    def create_choose_url(self,
+                          choices: Iterable[str],
+                          tournament: str,
+                          ttl=600,
+                          expiration_ttl=3600,
+                          choices_prefix: str = '',
+                          choices_suffix: str = '',
+                          destinations: Iterable[str] = [],
+                          destinations_prefix: str = '',
+                          destinations_suffix: str = '',
+                          go: bool = False,
+                          json: bool = False
+                          ) -> str:
         """
-        Build a URL that calls the Preferred.pictures API to select
+        Build a URL that calls the PreferredPictures API to select
         one choice from the list of choices available.
 
         Parameters:
@@ -98,11 +116,22 @@ class Client:
 
             Default: 3600
 
-        prefix: str
+        choices_prefix: str
             A prefix to apply to all of the choices
 
-        suffix: str
+        choices_suffix: str
             A suffix to apply to all of the choices
+
+        destinations : Iterable[Str]
+            An optional iterable that return the destination URLs that
+            will be paired with the choices.
+
+        destinations_prefix: str
+            A prefix to apply to all of the destination URLS
+
+        destinations_suffix: str
+            A suffix to apply to all of the destination URLS
+
 
         Returns:
         --------
@@ -122,21 +151,36 @@ class Client:
                 "Too many choices were passed the limit is " + str(self.max_choices))
 
         params = {
-            "choices": ",".join(choices),
+            "choices[]": choices,
             "tournament": tournament,
             "expiration": str(int(time.time()) + expiration_ttl),
             "uid": str(uuid.uuid4()),
             "ttl": str(ttl),
         }
 
-        if prefix != "":
-            params['prefix'] = prefix
+        if choices_prefix != "":
+            params['choices_prefix'] = choices_prefix
 
-        if suffix != "":
-            params['suffix'] = suffix
+        if choices_suffix != "":
+            params['choices_suffix'] = choices_suffix
+
+        if len(destinations) > 0:
+            params['destinations[]'] = destinations
+
+        if destinations_prefix != "":
+            params['destinations_prefix'] = destinations_prefix
+
+        if destinations_suffix != "":
+            params['destinations_suffix'] = destinations_suffix
+
+        if json == True:
+            params['json'] = 'true'
+
+        if go == True:
+            params['go'] = 'true'
 
         signing_string = "/".join(
-            map(lambda name: params[name],
+            map(lambda name: params[name] if isinstance(params[name], collections.abc.Iterable) == False else ",".join(params[name]),
                 filter(lambda name: name in params, signature_field_order)
                 )
         )
@@ -149,10 +193,10 @@ class Client:
         params['identity'] = self.identity
         params['signature'] = signature
 
-        return "{}/choose-url?{}".format(self.endpoint, urlencode(params))
+        return "{}/choose-url?{}".format(self.endpoint, urlencode(params, True))
 
 
 if __name__ == "__main__":
     pp = Client("testidentity", "secret123456")
-    url = pp.create_choose_url(["red", "green", "blue"], "test-tournament", )
+    url = pp.create_choose_url(["red", "green", "blue"], "test-tournament")
     print(url)

@@ -6,11 +6,11 @@ with open("README.md", "r") as fh:
 setup(
     name='preferred_pictures',
     packages=['preferred_pictures'],
-    version='0.2',
+    version='0.3',
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='MIT',
-    description='A client for the Preferred.pictures API that makes integration easy',
+    description='A client for the PreferredPictures API that makes integration easy',
     author='Preferred.pictures',
     author_email='contact@preferred.pictures',
     url='https://github.com/preferred-pictures/python',
