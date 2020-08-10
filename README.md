@@ -3,7 +3,9 @@
 The [PreferredPictures](https://preferred.pictures) Python library provides a convenient way to call the
 [PreferredPictures](https://preferred.pictures) API for applications written in Python.
 
-[View the full documentation about the PreferredPicture's API](https://docs.preferred.pictures/api-sdks/api)
+[View the documentation of this module](https://preferred-pictures.github.io/python/build/html/index.html)
+
+[View the documentation about the PreferredPicture's API](https://docs.preferred.pictures/api-sdks/api)
 
 [Learn more about what PreferredPictures can do.](https://docs.preferred.pictures/)
 
@@ -31,7 +33,7 @@ url = pp.create_choose_url(
     ],
     "test-tournament")
 
-# The URL returend will appear to be something like:
+# The URL returned will appear to be something like:
 #
 # https://api.preferred-pictures.com/choose-url?choices%5B%5D=red&choices%5B%5D=green&choices%5B%5D=blue&tournament=test-tournament&expiration=1597011644&uid=362511d6-997f-452b-afee-8e46331da04a&ttl=600&identity=testidentity&signature=7c6d305405b4518876543435ce5657ee820cad0601359fa173a854dc0dfd6ea1
 #
