@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>preferred_pictures.client &#8212; PreferredPictures 0.3 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for preferred_pictures.client</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">hmac</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">collections.abc</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlencode</span>
+
+<span class="n">signature_field_order</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;choices_prefix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;choices_suffix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;choices[]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;choices&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;destinations_prefix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;destinations_suffix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;destinations[]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;destinations&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;expiration&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;go&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tournament&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ttl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;uid&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../index.html#preferred_pictures.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This class is a PreferredPictures client</span>
+
+<span class="sd">    :param identity:</span>
+<span class="sd">        The PreferredPictures identity to use when creating</span>
+<span class="sd">        requests.</span>
+<span class="sd">    :type identity: str</span>
+
+<span class="sd">    :param secret_key:</span>
+<span class="sd">        The secret key associated with the passed identity</span>
+<span class="sd">    :type secret_key: str</span>
+
+<span class="sd">    :returns: A new PreferredPictures client instance</span>
+<span class="sd">    :rtype: PreferredPictures.Client</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; import preferred_pictures</span>
+<span class="sd">    &gt;&gt;&gt; pp_client = preferred_pictures.Client(identity, secret_key)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_choices</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s2">&quot;https://api.preferred-pictures.com&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">=</span> <span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span> <span class="o">=</span> <span class="n">secret_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_choices</span> <span class="o">=</span> <span class="n">max_choices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint</span>
+
+<div class="viewcode-block" id="Client.create_choose_url"><a class="viewcode-back" href="../../index.html#preferred_pictures.Client.create_choose_url">[docs]</a>    <span class="k">def</span> <span class="nf">create_choose_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">choices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                          <span class="n">tournament</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                          <span class="n">ttl</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                          <span class="n">expiration_ttl</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span>
+                          <span class="n">choices_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                          <span class="n">choices_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                          <span class="n">destinations</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+                          <span class="n">destinations_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                          <span class="n">destinations_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                          <span class="n">go</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                          <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                          <span class="n">uid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                          <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a URL that calls the PreferredPictures API to select</span>
+<span class="sd">        one choice from the list of choices available.</span>
+
+<span class="sd">        :param choices: A interable that returns the choices that</span>
+<span class="sd">            should be sent to the api</span>
+<span class="sd">        :type choices: Iterable[str]</span>
+
+<span class="sd">        :param tournament:</span>
+<span class="sd">            The tournament in which this request participates.</span>
+<span class="sd">        :type tournament: str</span>
+
+<span class="sd">        :param ttl:</span>
+<span class="sd">            The time to live for an action to be recorded from</span>
+<span class="sd">            this choice. Specified in seconds.</span>
+<span class="sd">            Default: 600</span>
+<span class="sd">        :type ttl: int, optional</span>
+
+<span class="sd">        :param expiration_ttl:</span>
+<span class="sd">            The time to live for the request signature. Specified</span>
+<span class="sd">            in seconds.</span>
+<span class="sd">            Default: 3600</span>
+<span class="sd">        :type expiration_ttl: int, optional</span>
+
+<span class="sd">        :param choices_prefix:</span>
+<span class="sd">            A prefix to apply to all of the choices</span>
+<span class="sd">        :type choices_prefix: str</span>
+
+<span class="sd">        :param choices_suffix:</span>
+<span class="sd">            A suffix to apply to all of the choices</span>
+<span class="sd">        :type choices_suffix: str</span>
+
+<span class="sd">        :param destinations:</span>
+<span class="sd">            An optional iterable that return the destination URLs that</span>
+<span class="sd">            will be paired with the choices.</span>
+<span class="sd">        :type destinations: Iterable[Str]</span>
+
+<span class="sd">        :param destinations_prefix:</span>
+<span class="sd">            A prefix to apply to all of the destination URLS</span>
+<span class="sd">        :type destinations_prefix: str</span>
+
+<span class="sd">        :param destinations_suffix:</span>
+<span class="sd">            A suffix to apply to all of the destination URLS</span>
+<span class="sd">        :type destinations_suffix: str</span>
+
+<span class="sd">        :param uid:</span>
+<span class="sd">            An optional unique identifier that is used to correlate</span>
+<span class="sd">            choices and actions. If it is not specified a UUID v4</span>
+<span class="sd">            will be generated.</span>
+<span class="sd">        :type uid: str</span>
+
+<span class="sd">        :return: A signed URL that contains all of the specified</span>
+<span class="sd">            parameters.</span>
+<span class="sd">        :rtype: str</span>
+
+<span class="sd">        :Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; # The simpliest example of choosing between</span>
+<span class="sd">        &gt;&gt;&gt; # three URLs.</span>
+<span class="sd">        &gt;&gt;&gt; #</span>
+<span class="sd">        &gt;&gt;&gt; import preferred_pictures</span>
+<span class="sd">        &gt;&gt;&gt; pp_client = preferred_pictures.Client(identity, secret_key)</span>
+<span class="sd">        &gt;&gt;&gt; url = pp_client.create_choose_url(</span>
+<span class="sd">        &gt;&gt;&gt;     choices=[</span>
+<span class="sd">        &gt;&gt;&gt;         &#39;https://example.com/color-red.jpg&#39;,</span>
+<span class="sd">        &gt;&gt;&gt;         &#39;https://example.com/color-green.jpg&#39;,</span>
+<span class="sd">        &gt;&gt;&gt;         &#39;https://example.com/color-blue.jpg&#39;,</span>
+<span class="sd">        &gt;&gt;&gt;     ],</span>
+<span class="sd">        &gt;&gt;&gt;     tournament: &#39;test-tournament&#39;,</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &quot;https://api.preferred-pictures.com/....&quot;</span>
+
+<span class="sd">        &gt;&gt;&gt; # Different Example using prefix and suffix for choices.</span>
+<span class="sd">        &gt;&gt;&gt; url = pp_client.create_choose_url(</span>
+<span class="sd">        &gt;&gt;&gt;     choices=[&#39;red&#39;, &#39;green&#39;, &#39;blue&#39;],</span>
+<span class="sd">        &gt;&gt;&gt;     tournament: &#39;test-tournament&#39;,</span>
+<span class="sd">        &gt;&gt;&gt;     choices_prefix: &#39;https://example.com/color-&#39;,</span>
+<span class="sd">        &gt;&gt;&gt;     choices_suffix: &#39;.jpg&#39;,</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &quot;https://api.preferred-pictures.com/....&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ttl</span> <span class="o">&gt;</span> <span class="n">expiration_ttl</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;expiration_ttl must be &gt;= ttl&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No choices were passed&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_choices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Too many choices were passed the limit is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_choices</span><span class="p">))</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;choices[]&quot;</span><span class="p">:</span> <span class="n">choices</span><span class="p">,</span>
+            <span class="s2">&quot;tournament&quot;</span><span class="p">:</span> <span class="n">tournament</span><span class="p">,</span>
+            <span class="s2">&quot;expiration&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">+</span> <span class="n">expiration_ttl</span><span class="p">),</span>
+            <span class="s2">&quot;ttl&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">ttl</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">uid</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">choices_prefix</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;choices_prefix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">choices_prefix</span>
+
+        <span class="k">if</span> <span class="n">choices_suffix</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;choices_suffix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">choices_suffix</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">destinations</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;destinations[]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">destinations</span>
+
+        <span class="k">if</span> <span class="n">destinations_prefix</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;destinations_prefix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">destinations_prefix</span>
+
+        <span class="k">if</span> <span class="n">destinations_suffix</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;destinations_suffix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">destinations_suffix</span>
+
+        <span class="k">if</span> <span class="n">json</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;true&#39;</span>
+
+        <span class="k">if</span> <span class="n">go</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;go&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;true&#39;</span>
+
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;identity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span>
+
+        <span class="n">included_fields</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+                              <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">params</span><span class="p">,</span> <span class="n">signature_field_order</span><span class="p">))</span>
+
+        <span class="n">signed_values</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">,</span>
+                            <span class="n">included_fields</span><span class="p">)</span>
+
+        <span class="n">signing_string</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signed_values</span><span class="p">)</span>
+
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+            <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">),</span>
+            <span class="nb">bytearray</span><span class="p">(</span><span class="n">signing_string</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">),</span>
+            <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;signature&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">signature</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/choose?</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">&quot;testidentity&quot;</span><span class="p">,</span> <span class="s2">&quot;secret123456&quot;</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">create_choose_url</span><span class="p">([</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">],</span> <span class="s2">&quot;test-tournament&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, PreferredPictures.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

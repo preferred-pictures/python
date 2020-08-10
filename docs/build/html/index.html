@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PreferredPictures Python Client &#8212; PreferredPictures 0.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="preferredpictures-python-client">
+<h1>PreferredPictures Python Client<a class="headerlink" href="#preferredpictures-python-client" title="Permalink to this headline">¶</a></h1>
+<p>This Python module allows easy use of the PreferredPictures API.</p>
+<p><a class="reference external" href="https://docs.preferred.pictures/">PreferredPictures’</a> goal is to choose the best option from many different choices.
+You can use it to decide between different images of the same product to show to
+a customer. For example, you’re showing a jacket that comes in multiple colors.
+You have one photo of the coat in red, one in blue, and one in dark gray, but you
+can only show one of them. PreferredPictures’ choice is the one option that it
+believes is most likely to result in a click or other action that you want to track.</p>
+<p>View the entire <a class="reference external" href="https://docs.preferred.pictures/api-sdks/api">PreferredPictures API</a>.</p>
+<p>To get started all you need to do is run:</p>
+<p><code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">preferred_pictures</span></code></p>
+<div class="section" id="client">
+<h2>Client<a class="headerlink" href="#client" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="preferred_pictures.Client">
+<em class="property">class </em><code class="sig-prename descclassname">preferred_pictures.</code><code class="sig-name descname">Client</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">identity</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">secret_key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">max_choices</span><span class="o">=</span><span class="default_value">35</span></em>, <em class="sig-param"><span class="n">endpoint</span><span class="o">=</span><span class="default_value">'https://api.preferred-pictures.com'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preferred_pictures/client.html#Client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preferred_pictures.Client" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is a PreferredPictures client</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>identity</strong> (<em>str</em>) – The PreferredPictures identity to use when creating
+requests.</p></li>
+<li><p><strong>secret_key</strong> (<em>str</em>) – The secret key associated with the passed identity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new PreferredPictures client instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PreferredPictures.Client</p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">preferred_pictures</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp_client</span> <span class="o">=</span> <span class="n">preferred_pictures</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="preferred_pictures.Client.create_choose_url">
+<code class="sig-name descname">create_choose_url</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">choices</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">tournament</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">ttl</span><span class="o">=</span><span class="default_value">600</span></em>, <em class="sig-param"><span class="n">expiration_ttl</span><span class="o">=</span><span class="default_value">3600</span></em>, <em class="sig-param"><span class="n">choices_prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">choices_suffix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">destinations</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">destinations_prefix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">destinations_suffix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">go</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">json</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">uid</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/preferred_pictures/client.html#Client.create_choose_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preferred_pictures.Client.create_choose_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a URL that calls the PreferredPictures API to select
+one choice from the list of choices available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>choices</strong> (<em>Iterable</em><em>[</em><em>str</em><em>]</em>) – A interable that returns the choices that
+should be sent to the api</p></li>
+<li><p><strong>tournament</strong> (<em>str</em>) – The tournament in which this request participates.</p></li>
+<li><p><strong>ttl</strong> (<em>int</em><em>, </em><em>optional</em>) – The time to live for an action to be recorded from
+this choice. Specified in seconds.
+Default: 600</p></li>
+<li><p><strong>expiration_ttl</strong> (<em>int</em><em>, </em><em>optional</em>) – The time to live for the request signature. Specified
+in seconds.
+Default: 3600</p></li>
+<li><p><strong>choices_prefix</strong> (<em>str</em>) – A prefix to apply to all of the choices</p></li>
+<li><p><strong>choices_suffix</strong> (<em>str</em>) – A suffix to apply to all of the choices</p></li>
+<li><p><strong>destinations</strong> (<em>Iterable</em><em>[</em><em>Str</em><em>]</em>) – An optional iterable that return the destination URLs that
+will be paired with the choices.</p></li>
+<li><p><strong>destinations_prefix</strong> (<em>str</em>) – A prefix to apply to all of the destination URLS</p></li>
+<li><p><strong>destinations_suffix</strong> (<em>str</em>) – A suffix to apply to all of the destination URLS</p></li>
+<li><p><strong>uid</strong> (<em>str</em>) – An optional unique identifier that is used to correlate
+choices and actions. If it is not specified a UUID v4
+will be generated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A signed URL that contains all of the specified
+parameters.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># The simpliest example of choosing between</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># three URLs.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">preferred_pictures</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp_client</span> <span class="o">=</span> <span class="n">preferred_pictures</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="n">pp_client</span><span class="o">.</span><span class="n">create_choose_url</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s1">&#39;https://example.com/color-red.jpg&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s1">&#39;https://example.com/color-green.jpg&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s1">&#39;https://example.com/color-blue.jpg&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">tournament</span><span class="p">:</span> <span class="s1">&#39;test-tournament&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&quot;https://api.preferred-pictures.com/....&quot;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Different Example using prefix and suffix for choices.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="n">pp_client</span><span class="o">.</span><span class="n">create_choose_url</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">tournament</span><span class="p">:</span> <span class="s1">&#39;test-tournament&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">choices_prefix</span><span class="p">:</span> <span class="s1">&#39;https://example.com/color-&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">choices_suffix</span><span class="p">:</span> <span class="s1">&#39;.jpg&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&quot;https://api.preferred-pictures.com/....&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, PreferredPictures.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
