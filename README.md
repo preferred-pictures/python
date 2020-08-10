@@ -23,7 +23,13 @@ secret key, which is available in the PreferredPictures interface.
 from preferred_pictures import Client
 
 pp = Client("testidentity", "secret123456")
-url = pp.create_choose_url(["red", "green", "blue"], "test-tournament", )
+url = pp.create_choose_url(
+    [
+        "https://example.com/image-red.jpg",
+        "https://example.com/image-green.jpg",
+        "https://example.com/image-blue.jpg"
+    ],
+    "test-tournament")
 
 # The URL returend will appear to be something like:
 #

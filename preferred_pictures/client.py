@@ -25,55 +25,28 @@ signature_field_order = [
 
 
 class Client:
-    """
-    A class to represent a PreferredPictures client
+    """This class is a PreferredPictures client
 
-    Attributes
-    ----------
-    identity : str
-        The identity that is used to generate requests
+    :param identity:
+        The PreferredPictures identity to use when creating
+        requests.
+    :type identity: str
 
-    secret_key: str
-        The secret key associated with the identity to create
-        signatures for requests.
+    :param secret_key:
+        The secret key associated with the passed identity
+    :type secret_key: str
 
-    max_choices: int
-        The maximum number of choices allowed in an API
-        request.
+    :returns: A new PreferredPictures client instance
+    :rtype: PreferredPictures.Client
 
-        The default value is 35.
+    :Example:
 
-    endpoint: str
-        The endpoint of the PreferredPictures API that
-        should be used, by default this is
+    >>> import preferred_pictures
+    >>> pp_client = preferred_pictures.Client(identity, secret_key)
 
-        https://api.preferred-pictures.com
-
-    Methods
-    -------
-    create_choose_url(choices: Iterable[str], tournament: str, ttl=600, expiration_ttl=3600, prefix='', suffix='') -> str:
-        Build a URL that calls the PreferredPictures API to select
-        one choice from the list of choices available.
     """
 
     def __init__(self, identity: str, secret_key: str, max_choices=35, endpoint="https://api.preferred-pictures.com"):
-        """
-        Creates a new PreferredPictures client.
-
-        Parameters:
-        -----------
-
-        identity : str
-            The PreferredPictures identity to use when creating
-            requests.
-
-        secret_key : str
-            The secret key associated with the passed identity
-
-        Returns:
-
-            A new PreferredPictures client instance
-        """
         self.identity = identity
         self.secret_key = secret_key
         self.max_choices = max_choices
@@ -90,56 +63,89 @@ class Client:
                           destinations_prefix: str = '',
                           destinations_suffix: str = '',
                           go: bool = False,
-                          json: bool = False
+                          json: bool = False,
+                          uid: str = ''
                           ) -> str:
         """
         Build a URL that calls the PreferredPictures API to select
         one choice from the list of choices available.
 
-        Parameters:
-        -----------
+        :param choices: A interable that returns the choices that
+            should be sent to the api
+        :type choices: Iterable[str]
 
-        choices : Iterable[str]
-            A interable that returns the choices that should be sent
-            to the api
-
-        tournament: str
+        :param tournament:
             The tournament in which this request participates.
+        :type tournament: str
 
-        ttl: int, optional
+        :param ttl:
             The time to live for an action to be recorded from
             this choice. Specified in seconds.
-
             Default: 600
+        :type ttl: int, optional
 
-        expiration_ttl: int, optional
+        :param expiration_ttl:
             The time to live for the request signature. Specified
             in seconds.
-
             Default: 3600
+        :type expiration_ttl: int, optional
 
-        choices_prefix: str
+        :param choices_prefix:
             A prefix to apply to all of the choices
+        :type choices_prefix: str
 
-        choices_suffix: str
+        :param choices_suffix:
             A suffix to apply to all of the choices
+        :type choices_suffix: str
 
-        destinations : Iterable[Str]
+        :param destinations:
             An optional iterable that return the destination URLs that
             will be paired with the choices.
+        :type destinations: Iterable[Str]
 
-        destinations_prefix: str
+        :param destinations_prefix:
             A prefix to apply to all of the destination URLS
+        :type destinations_prefix: str
 
-        destinations_suffix: str
+        :param destinations_suffix:
             A suffix to apply to all of the destination URLS
+        :type destinations_suffix: str
 
+        :param uid:
+            An optional unique identifier that is used to correlate
+            choices and actions. If it is not specified a UUID v4
+            will be generated.
+        :type uid: str
 
-        Returns:
-        --------
+        :return: A signed URL that contains all of the specified
+            parameters.
+        :rtype: str
 
-        str - A signed URL that contains all of the specified
-        parameters.
+        :Examples:
+
+        >>> # The simpliest example of choosing between
+        >>> # three URLs.
+        >>> #
+        >>> import preferred_pictures
+        >>> pp_client = preferred_pictures.Client(identity, secret_key)
+        >>> url = pp_client.create_choose_url(
+        >>>     choices=[
+        >>>         'https://example.com/color-red.jpg',
+        >>>         'https://example.com/color-green.jpg',
+        >>>         'https://example.com/color-blue.jpg',
+        >>>     ],
+        >>>     tournament: 'test-tournament',
+        >>> )
+        "https://api.preferred-pictures.com/...."
+
+        >>> # Different Example using prefix and suffix for choices.
+        >>> url = pp_client.create_choose_url(
+        >>>     choices=['red', 'green', 'blue'],
+        >>>     tournament: 'test-tournament',
+        >>>     choices_prefix: 'https://example.com/color-',
+        >>>     choices_suffix: '.jpg',
+        >>> )
+        "https://api.preferred-pictures.com/...."
 
         """
         if ttl > expiration_ttl:
@@ -156,9 +162,13 @@ class Client:
             "choices[]": choices,
             "tournament": tournament,
             "expiration": str(int(time.time()) + expiration_ttl),
-            "uid": str(uuid.uuid4()),
             "ttl": str(ttl),
         }
+
+        if uid != "":
+            params['uid'] = uid
+        else:
+            params['uid'] = str(uuid.uuid4())
 
         if choices_prefix != "":
             params['choices_prefix'] = choices_prefix
