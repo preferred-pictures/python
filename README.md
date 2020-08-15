@@ -26,12 +26,21 @@ from preferred_pictures import Client
 
 pp = Client("testidentity", "secret123456")
 url = pp.create_choose_url(
-    [
+    choices=[
         "https://example.com/image-red.jpg",
         "https://example.com/image-green.jpg",
         "https://example.com/image-blue.jpg"
     ],
-    "test-tournament")
+    tournament="test-tournament")
+
+# Or more using a prefix and suffix for choices
+
+url = pp.create_choose_url(
+    choices=["red", "green", "blue"],
+    choices_prefix="https://example.com/image-",
+    choices_suffix=".jpg",
+    tournament="test-tournament")
+
 
 # The URL returned will appear to be something like:
 #
